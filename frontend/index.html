@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>K8s Multi-Tier App</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .status { padding: 15px; border-radius: 8px; margin: 10px 0; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; margin: 5px; }
+        #items { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Kubernetes Multi-Tier App</h1>
+    <p>Frontend (Nginx) → Backend (Flask) → Database (PostgreSQL)</p>
+
+    <button onclick="checkHealth()">Check Backend Health</button>
+    <button onclick="checkDB()">Check DB Connection</button>
+    <button onclick="getItems()">Get Items</button>
+
+    <div id="result"></div>
+    <div id="items"></div>
+
+    <script>
+        const API = '/api';
+
+        async function checkHealth() {
+            try {
+                const res = await fetch(API + '/health');
+                const data = await res.json();
+                document.getElementById('result').innerHTML =
+                    '<div class="status success">Backend: ' + data.status + '</div>';
+            } catch(e) {
+                document.getElementById('result').innerHTML =
+                    '<div class="status error">Backend unreachable: ' + e.message + '</div>';
+            }
+        }
+
+        async function checkDB() {
+            try {
+                const res = await fetch(API + '/db-status');
+                const data = await res.json();
+                const cls = data.database === 'connected' ? 'success' : 'error';
+                document.getElementById('result').innerHTML =
+                    '<div class="status ' + cls + '">Database: ' + data.database + '</div>';
+            } catch(e) {
+                document.getElementById('result').innerHTML =
+                    '<div class="status error">Error: ' + e.message + '</div>';
+            }
+        }
+
+        async function getItems() {
+            try {
+                const res = await fetch(API + '/api/items');
+                const data = await res.json();
+                let html = '<h3>Items:</h3>';
+                data.items.forEach(item => {
+                    html += '<p>' + item.id + '. ' + item.name + ' (' + item.created_at + ')</p>';
+                });
+                document.getElementById('items').innerHTML = html;
+            } catch(e) {
+                document.getElementById('items').innerHTML =
+                    '<div class="status error">Error: ' + e.message + '</div>';
+            }
+        }
+    </script>
+</body>
+</html>
